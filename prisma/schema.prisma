@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Fornecedor {
+  id          Int       @id @default(autoincrement())
+  nome        String
+  email       String?
+  telefone    String?
+  cnpj        String?
+  cep         String?   @db.Char(9)
+  logradouro  String?
+  bairro      String?
+  localidade  String?
+  uf          String?   @db.Char(2)
+  ativo       Boolean   @default(true)
+
+  produtos    Produto[]
+
+  @@map("fornecedor")
+}
+
+model Produto {
+  id           Int       @id @default(autoincrement())
+  nome         String
+  descricao    String?
+  categoria    Categoria
+  disponivel   Boolean   @default(true)
+  preco        Float
+  foto         String?
+
+  fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  fornecedorId Int?
+
+  @@map("produto")
+}
+
+enum Categoria {
+  ELETRONICOS
+  VESTUARIO
+  ALIMENTOS
+  MOVEIS
+}
