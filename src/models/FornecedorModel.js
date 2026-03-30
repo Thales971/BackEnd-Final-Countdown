@@ -1,135 +1,100 @@
 import prisma from '../utils/prismaClient.js';
-import { consultarCEP } from '../utils/viaCep.js';
 
-class FornecedorModel {
-    static async criar(payload) {
-        const { nome, email, telefone, cnpj, cep, ativo = true } = payload;
+export default class FornecedorModel {
+    constructor({
+        id = null,
+        nome = null,
+        email = null,
+        telefone = null,
+        cnpj = null,
+        cep = null,
+        logradouro = null,
+        bairro = null,
+        localidade = null,
+        uf = null,
+        ativo = true,
+    } = {}) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.telefone = telefone;
+        this.cnpj = cnpj;
+        this.cep = cep;
+        this.logradouro = logradouro;
+        this.bairro = bairro;
+        this.localidade = localidade;
+        this.uf = uf;
+        this.ativo = ativo;
+    }
 
-        if (
-            !nome ||
-            typeof nome !== 'string' ||
-            nome.trim().length < 3 ||
-            nome.trim().length > 100
-        ) {
-            throw new Error('Campo obrigatório não informado.');
-        }
+    async criar() {
+        return prisma.fornecedor.create({
+            data: {
+                nome: this.nome,
+                email: this.email,
+                telefone: this.telefone,
+                cnpj: this.cnpj,
+                cep: this.cep,
+                logradouro: this.logradouro,
+                bairro: this.bairro,
+                localidade: this.localidade,
+                uf: this.uf,
+                ativo: this.ativo,
+            },
+        });
+    }
 
-        if (!cep) {
-            throw new Error('Campo obrigatório não informado.');
-        }
+    async atualizar() {
+        return prisma.fornecedor.update({
+            where: { id: this.id },
+            data: {
+                nome: this.nome,
+                email: this.email,
+                telefone: this.telefone,
+                cnpj: this.cnpj,
+                cep: this.cep,
+                logradouro: this.logradouro,
+                bairro: this.bairro,
+                localidade: this.localidade,
+                uf: this.uf,
+                ativo: this.ativo,
+            },
+        });
+    }
 
-        // ViaCEP (lança os erros: CEP inválido., CEP não encontrado., Serviço externo indisponível.)
-        const endereco = await consultarCEP(String(cep));
-
-        const data = {
-            nome: nome.trim(),
-            email: email || null,
-            telefone: telefone || null,
-            cnpj: cnpj || null,
-            cep: endereco.cep,
-            logradouro: endereco.logradouro,
-            bairro: endereco.bairro,
-            localidade: endereco.localidade,
-            uf: endereco.uf,
-            ativo: ativo === undefined ? true : Boolean(ativo),
-        };
-
-        return prisma.fornecedor.create({ data });
+    async deletar() {
+        return prisma.fornecedor.delete({ where: { id: this.id } });
     }
 
     static async buscarTodos(filtros = {}) {
         const where = {};
 
         if (filtros.nome) {
-            where.nome = { contains: String(filtros.nome), mode: 'insensitive' };
+            where.nome = { contains: filtros.nome, mode: 'insensitive' };
         }
-        if (filtros.email) {
-            where.email = { contains: String(filtros.email), mode: 'insensitive' };
+        if (filtros.email !== undefined) {
+            where.email = { contains: filtros.email, mode: 'insensitive' };
         }
-        if (filtros.localidade) {
-            where.localidade = { contains: String(filtros.localidade), mode: 'insensitive' };
+        if (filtros.telefone !== undefined) {
+            where.telefone = { contains: filtros.telefone, mode: 'insensitive' };
+        }
+        if (filtros.cnpj !== undefined) {
+            where.cnpj = { contains: filtros.cnpj, mode: 'insensitive' };
+        }
+        if (filtros.cep !== undefined) {
+            where.cep = { contains: filtros.cep, mode: 'insensitive' };
+        }
+        if (filtros.localidade !== undefined) {
+            where.localidade = { contains: filtros.localidade, mode: 'insensitive' };
         }
 
         return prisma.fornecedor.findMany({ where });
     }
-
     static async buscarPorId(id) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
+        const data = await prisma.fornecedor.findUnique({ where: { id } });
+        if (!data) {
             return null;
         }
-
-        const data = await prisma.fornecedor.findUnique({ where: { id: intId } });
-        return data || null;
-    }
-
-    static async atualizar(id, payload) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.fornecedor.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.ativo === false) {
-            throw new Error('Operação não permitida para registro inativo.');
-        }
-
-        const { nome, email, telefone, cnpj, cep, ativo } = payload;
-
-        if (nome !== undefined) {
-            if (
-                !nome ||
-                typeof nome !== 'string' ||
-                nome.trim().length < 3 ||
-                nome.trim().length > 100
-            ) {
-                throw new Error('Campo obrigatório não informado.');
-            }
-        }
-
-        if (!cep) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        const endereco = await consultarCEP(String(cep));
-
-        const data = {
-            nome: nome !== undefined ? nome.trim() : existente.nome,
-            email: email !== undefined ? email : existente.email,
-            telefone: telefone !== undefined ? telefone : existente.telefone,
-            cnpj: cnpj !== undefined ? cnpj : existente.cnpj,
-            cep: endereco.cep,
-            logradouro: endereco.logradouro,
-            bairro: endereco.bairro,
-            localidade: endereco.localidade,
-            uf: endereco.uf,
-            ativo: ativo !== undefined ? Boolean(ativo) : existente.ativo,
-        };
-
-        return prisma.fornecedor.update({ where: { id: intId }, data });
-    }
-
-    static async deletar(id) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.fornecedor.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.ativo === false) {
-            throw new Error('Operação não permitida para registro inativo.');
-        }
-
-        return prisma.fornecedor.delete({ where: { id: intId } });
+        return new FornecedorModel(data);
     }
 }
-
-export default FornecedorModel;

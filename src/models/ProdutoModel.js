@@ -1,45 +1,58 @@
 import prisma from '../utils/prismaClient.js';
 
-const CATEGORIAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
+export default class ProdutoModel {
+    constructor({ id = null, nome = null, descricao = null, categoria = null, preco = null, disponivel = true, foto = null } = {}){
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.categoria = categoria;
+        this.preco = preco;
+        this.disponivel = disponivel;
+        this.foto = foto;
+    }
 
-class ProdutoModel {
-    static async criar(payload) {
-        const { nome, descricao, categoria, disponivel = true, preco, fornecedorId } = payload;
+    async criar() {
+        return prisma.produto.create({
+            data: {
+                nome: this.nome,
+                descricao: this.descricao,
+                categoria: this.categoria,
+                preco: this.preco,
+                disponivel: this.disponivel,
+                foto: this.foto,
+            },
+        });
+    }
 
-        if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
+    async atualizar() {
+        return prisma.produto.update({
+            where: { id: this.id },
+            data: {
+                nome: this.nome,
+                descricao: this.descricao,
+                categoria: this.categoria,
+                preco: this.preco,
+                disponivel: this.disponivel,
+                foto: this.foto,
+            },
+        });
+    }
 
-        if (!categoria || !CATEGORIAS.includes(categoria)) {
-            throw new Error('Categoria inválida.');
-        }
-
-        if (preco === undefined || preco === null || Number(preco) < 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        const data = {
-            nome: nome.trim(),
-            descricao: descricao || null,
-            categoria,
-            disponivel: Boolean(disponivel),
-            preco: Number(preco),
-            foto: null,
-            fornecedorId: fornecedorId || null,
-        };
-
-        return prisma.produto.create({ data });
+    async deletar() {
+        return prisma.produto.delete({ where: { id: this.id } });
     }
 
     static async buscarTodos(filtros = {}) {
         const where = {};
 
         if (filtros.nome) {
-            where.nome = { contains: String(filtros.nome), mode: 'insensitive' };
+            where.nome = { contains: filtros.nome, mode: 'insensitive' };
         }
+
         if (filtros.categoria) {
-            where.categoria = filtros.categoria;
+            where.categoria = filtros.categoria.toUpperCase();
         }
+
         if (filtros.disponivel !== undefined) {
             where.disponivel = filtros.disponivel === 'true' || filtros.disponivel === true;
         }
@@ -48,74 +61,12 @@ class ProdutoModel {
     }
 
     static async buscarPorId(id) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
+        const data = await prisma.produto.findUnique({ where: { id } });
+
+        if (!data) {
             return null;
         }
 
-        const data = await prisma.produto.findUnique({ where: { id: intId } });
-        return data || null;
-    }
-
-    static async atualizar(id, payload) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.produto.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.disponivel === false) {
-            throw new Error('Não é permitido utilizar item indisponível.');
-        }
-
-        const { nome, descricao, categoria, disponivel, preco, fornecedorId, foto } = payload;
-
-        if (categoria !== undefined && !CATEGORIAS.includes(categoria)) {
-            throw new Error('Categoria inválida.');
-        }
-
-        if (preco !== undefined && Number(preco) < 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        const data = {
-            nome: nome !== undefined ? String(nome).trim() : existente.nome,
-            descricao: descricao !== undefined ? descricao : existente.descricao,
-            categoria: categoryOrDefault(categoria, existente.categoria),
-            disponivel: disponivel !== undefined ? Boolean(disponivel) : existente.disponivel,
-            preco: preco !== undefined ? Number(preco) : existente.preco,
-            fornecedorId: fornecedorId !== undefined ? fornecedorId : existente.fornecedorId,
-            foto: foto !== undefined ? foto : existente.foto,
-        };
-
-        return prisma.produto.update({ where: { id: intId }, data });
-    }
-
-    static async deletar(id) {
-        const intId = parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.produto.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.disponivel === false) {
-            throw new Error('Não é permitido utilizar item indisponível.');
-        }
-
-        return prisma.produto.delete({ where: { id: intId } });
+        return new ProdutoModel(data);
     }
 }
-
-function categoryOrDefault(categoria, current) {
-    return categoria !== undefined ? categoria : current;
-}
-
-export default ProdutoModel;
