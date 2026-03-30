@@ -1,6 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import exemplosRoutes from './routes/exemploRoute.js';
+import produtoRoutes from './routes/produtoRoutes.js';
 import docApiSwagger from 'express-jsdoc-swagger';
 
 const app = express();
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 
 // Rotas
 app.use('/api', exemplosRoutes);
+app.use('/api', produtoRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });

@@ -1,6 +1,4 @@
 import ProdutoModel from '../models/ProdutoModel.js';
-import UploadService from '../utils/UploadService.js';
-import PdfService from '../utils/PdfService.js';
 
 const CATEGORIAS_VALIDAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
 
@@ -14,7 +12,7 @@ const CATEGORIAS_VALIDAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
  */
 
 /**
- * POST /catalogo
+ * POST /api/catalogo
  * @tags Catálogo
  * @summary Cria um novo produto no catálogo
  * @description Endpoint responsável por cadastrar um novo produto/item no sistema
@@ -34,9 +32,15 @@ export const criar = async (req, res) => {
         const { nome, descricao, categoria, preco, disponivel } = req.body;
 
         if (!nome) return res.status(400).json({ error: 'Campo obrigatório não informado.' });
-        if (!categoria || !CATEGORIAS_VALIDAS.includes(categoria.toUpperCase())) {
+
+        let categoriaTratada = categoria;
+        if (
+            !categoria ||
+            !CATEGORIAS_VALIDAS.includes((categoriaTratada = categoria.trim().toUpperCase()))
+        ) {
             return res.status(400).json({ error: 'Categoria inválida.' });
         }
+
         if (preco === undefined || preco === null || parseFloat(preco) < 0) {
             return res
                 .status(400)
@@ -49,7 +53,7 @@ export const criar = async (req, res) => {
         const produto = new ProdutoModel({
             nome,
             descricao,
-            categoria: categoria.toUpperCase(),
+            categoria: categoriaTratada,
             preco: parseFloat(preco),
             disponivel: disponivel === 'true' || disponivel === true,
         });
@@ -64,7 +68,7 @@ export const criar = async (req, res) => {
 };
 
 /**
- * GET /catalogo
+ * GET /api/catalogo
  * @tags Catálogo
  * @summary Busca todos os produtos
  * @description Endpoint responsável por buscar todos os produtos do catálogo. Permite filtrar os resultados utilizando parâmetros de consulta (query params).
@@ -93,7 +97,7 @@ export const buscarTodos = async (req, res) => {
 };
 
 /**
- * GET /catalogo/{id}
+ * GET /api/catalogo/{id}
  * @tags Catálogo
  * @summary Busca um produto por ID
  * @description Endpoint responsável por buscar um registro de produto específico através do seu ID
@@ -124,7 +128,7 @@ export const buscarPorId = async (req, res) => {
 };
 
 /**
- * PUT /catalogo/{id}
+ * PUT /api/catalogo/{id}
  * @tags Catálogo
  * @summary Atualiza um produto
  * @description Endpoint responsável por atualizar parcialmente ou totalmente os dados de um produto existente
@@ -153,10 +157,11 @@ export const atualizar = async (req, res) => {
         if (req.body.nome !== undefined) produto.nome = req.body.nome;
         if (req.body.descricao !== undefined) produto.descricao = req.body.descricao;
         if (req.body.categoria !== undefined) {
-            if (!CATEGORIAS_VALIDAS.includes(req.body.categoria.toUpperCase())) {
+            const catLimpa = req.body.categoria.trim().toUpperCase();
+            if (!CATEGORIAS_VALIDAS.includes(catLimpa)) {
                 return res.status(400).json({ error: 'Categoria inválida.' });
             }
-            produto.categoria = req.body.categoria.toUpperCase();
+            produto.categoria = catLimpa;
         }
         if (req.body.preco !== undefined) {
             if (parseFloat(req.body.preco) < 0)
@@ -179,7 +184,7 @@ export const atualizar = async (req, res) => {
 };
 
 /**
- * DELETE /catalogo/{id}
+ * DELETE /api/catalogo/{id}
  * @tags Catálogo
  * @summary Deleta um produto
  * @description Endpoint responsável por remover permanentemente um produto do catálogo
@@ -203,73 +208,12 @@ export const deletar = async (req, res) => {
 
         await produto.deletar();
 
-        return res
-            .status(200)
-            .json({
-                message: `O registro "${produto.nome}" foi deletado com sucesso!`,
-                deletado: produto,
-            });
+        return res.status(200).json({
+            message: `O registro "${produto.nome}" foi deletado com sucesso!`,
+            deletado: produto,
+        });
     } catch (error) {
         console.error('Erro ao deletar:', error);
         return res.status(500).json({ error: 'Erro ao deletar registro.' });
-    }
-};
-
-export const uploadFoto = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const arquivo = req.file;
-
-        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido.' });
-        if (!arquivo) return res.status(400).json({ error: 'Campo obrigatório não informado.' });
-
-        const produto = await ProdutoModel.buscarPorId(parseInt(id));
-
-        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
-
-        const caminhoFoto = await UploadService.processarESalvarImagem(arquivo, produto.foto);
-
-        produto.foto = caminhoFoto;
-        const data = await produto.atualizar();
-
-        return res.status(200).json({ message: 'Foto atualizada com sucesso!', data });
-    } catch (error) {
-        console.error('Erro no upload de foto:', error);
-        return res.status(500).json({ error: 'Erro interno ao processar a foto.' });
-    }
-};
-
-export const gerarPdfIndividual = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido.' });
-
-        const produto = await ProdutoModel.buscarPorId(parseInt(id));
-
-        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
-
-        const pdfBuffer = await PdfService.gerarPdfProduto(produto);
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=produto_${id}.pdf`);
-        return res.status(200).send(pdfBuffer);
-    } catch (error) {
-        console.error('Erro ao gerar PDF individual:', error);
-        return res.status(500).json({ error: 'Erro ao gerar PDF.' });
-    }
-};
-
-export const gerarPdfGeral = async (req, res) => {
-    try {
-        const produtos = await ProdutoModel.buscarTodos(req.query);
-        const pdfBuffer = await PdfService.gerarPdfCatalogo(produtos || []);
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=catalogo_produtos.pdf');
-        return res.status(200).send(pdfBuffer);
-    } catch (error) {
-        console.error('Erro ao gerar PDF geral:', error);
-        return res.status(500).json({ error: 'Erro ao gerar PDF.' });
     }
 };
