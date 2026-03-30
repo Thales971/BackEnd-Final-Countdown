@@ -84,6 +84,9 @@ export default class FornecedorModel {
         if (filtros.cep !== undefined) {
             where.cep = { contains: filtros.cep, mode: 'insensitive' };
         }
+        if (filtros.localidade !== undefined) {
+            where.localidade = { contains: filtros.localidade, mode: 'insensitive' };
+        }
 
         return prisma.fornecedor.findMany({ where });
     }
