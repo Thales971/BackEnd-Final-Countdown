@@ -1,36 +1,41 @@
 import express from 'express';
 import 'dotenv/config';
-import exemplosRoutes from './routes/exemploRoute.js';
+import path from 'path';
+
+import apiKey from './utils/apiKey.js';
+import fornecedorRoutes from './routes/fornecedorRoutes.js';
 import produtoRoutes from './routes/produtoRoutes.js';
-import docApiSwagger from 'express-jsdoc-swagger';
+import exemploRoutes from './routes/exemploRoute.js'; // opcional
 
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
-docApiSwagger(app)({
-    info: {
-        title: 'API de Produtos',
-        version: '1.0.0',
-        description: 'Documentação da API de Produtos',
-    },
-    baseDir: import.meta.dirname,
-    filesPattern: './**/*.js',
-});
+// servir arquivos estáticos (uploads)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-app.get('/', (req, res) => {
-    res.send('🚀 API funcionando');
-});
+// rotas
+// todas as rotas /principal exigem X-API-Key (middleware apiKey)
+app.use('/principal', apiKey, fornecedorRoutes);
 
-// Rotas
-app.use('/api', exemplosRoutes);
-app.use('/api', produtoRoutes);
+// rotas de produto (sem autenticação)
+app.use('/catalogo', produtoRoutes);
+
+// rota opcional de exemplo
+app.use('/exemplo', exemploRoutes);
+
+app.get('/', (req, res) => res.send('🚀 API funcionando'));
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
 });
 
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno.' });
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
