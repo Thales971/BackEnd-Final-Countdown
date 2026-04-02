@@ -1,21 +1,35 @@
 import htmlPdf from 'html-pdf-node';
-import fs from 'fs';
 
 function produtoParaHtml(produto, fotoBase64 = null) {
     return `
-    <html>
-      <body>
-        <h1>Produto: ${produto.nome}</h1>
-        ${fotoBase64 ? `<img src="data:image/jpeg;base64,${fotoBase64}" style="max-width:300px;" />` : ''}
-        <ul>
-          <li>Descrição: ${produto.descricao || ''}</li>
-          <li>Categoria: ${produto.categoria}</li>
-          <li>Preço: ${produto.preco}</li>
-          <li>Disponível: ${produto.disponivel}</li>
-        </ul>
-      </body>
-    </html>
-  `;
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; }
+      h1 { margin-bottom: 16px; }
+      .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; }
+      .foto { margin: 10px 0 18px; }
+      .foto img { max-width: 260px; border-radius: 8px; border: 1px solid #cbd5e1; }
+      .linha { margin: 6px 0; }
+      .chave { font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <h1>Relatório Individual do Catálogo</h1>
+    <div class="card">
+      <div class="linha"><span class="chave">ID:</span> ${produto.id}</div>
+      <div class="linha"><span class="chave">Nome:</span> ${produto.nome}</div>
+      <div class="linha"><span class="chave">Descrição:</span> ${produto.descricao || '-'}</div>
+      <div class="linha"><span class="chave">Categoria:</span> ${produto.categoria}</div>
+      <div class="linha"><span class="chave">Disponível:</span> ${produto.disponivel ? 'Sim' : 'Não'}</div>
+      <div class="linha"><span class="chave">Preço:</span> R$ ${Number(produto.preco).toFixed(2)}</div>
+      <div class="linha"><span class="chave">Fornecedor ID:</span> ${produto.fornecedorId ?? '-'}</div>
+      <div class="foto">
+        ${fotoBase64 ? `<img src="data:image/jpeg;base64,${fotoBase64}" alt="Foto do produto" />` : 'Sem foto cadastrada'}
+      </div>
+    </div>
+  </body>
+</html>`;
 }
 
 export async function gerarPdfBuffer(html) {
@@ -34,10 +48,45 @@ export async function gerarPdfGeral(produtos) {
     const rows = produtos
         .map(
             (p) =>
-                `<tr><td>${p.id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.preco}</td></tr>`,
+                `<tr>
+                    <td>${p.id}</td>
+                    <td>${p.nome}</td>
+                    <td>${p.categoria}</td>
+                    <td>${p.disponivel ? 'Sim' : 'Não'}</td>
+                    <td>R$ ${Number(p.preco).toFixed(2)}</td>
+                    <td>${p.fornecedorId ?? '-'}</td>
+                </tr>`
         )
         .join('');
-    const html = `<html><body><h1>Catálogo</h1><table border="1"><thead><tr><th>ID</th><th>Nome</th><th>Categoria</th><th>Preço</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+
+    const html = `<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; }
+    h1 { margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    th { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <h1>Relatório Geral do Catálogo</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Categoria</th>
+        <th>Disponível</th>
+        <th>Preço</th>
+        <th>Fornecedor ID</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+
     return gerarPdfBuffer(html);
 }
 

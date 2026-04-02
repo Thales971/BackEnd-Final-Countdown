@@ -3,10 +3,10 @@ import * as controller from '../controllers/fornecedorController.js';
 
 const router = express.Router();
 
-router.post('/', controller.criarFornecedor);
-router.get('/', controller.buscarTodosOsFornecedores);
-router.get('/:id', controller.buscarFornecedorPorId);
-router.put('/:id', controller.atualizarFornecedor);
-router.delete('/:id', controller.deletarFornecedor);
+router.post('/', controller.criar);
+router.get('/', controller.listar);
+router.get('/:id', controller.obter);
+router.put('/:id', controller.atualizar);
+router.delete('/:id', controller.deletar);
 
 export default router;
