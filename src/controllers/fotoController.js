@@ -1,5 +1,4 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'fs/promises';
 import ProdutoModel from '../models/ProdutoModel.js';
 import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
 
