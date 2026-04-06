@@ -1,87 +1,240 @@
 import ProdutoModel from '../models/ProdutoModel.js';
-import { upload, saveImage, generateFileName } from '../utils/upload.js';
+import { saveImage, generateFileName } from '../utils/upload.js';
+
+const CATEGORIAS_VALIDAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
+const parseId = (value) => Number.parseInt(value, 10);
 
 export const criar = async (req, res) => {
-  try {
-    const data = await ProdutoModel.criar(req.body);
-    return res.status(201).json(data);
-  } catch (err) {
-    const msg = err.message;
-    if (['Campo obrigatório não informado.', 'Categoria inválida.'].includes(msg)) {
-      return res.status(400).json({ error: msg });
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+        }
+
+        const { nome, categoria, preco, disponivel, descricao, fornecedorId } = req.body;
+
+        if (!nome || !categoria || preco === undefined || disponivel === undefined) {
+            return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+        }
+
+        if (!CATEGORIAS_VALIDAS.includes(categoria)) {
+            return res.status(400).json({ error: 'Categoria inválida.' });
+        }
+
+        const precoNumero = Number.parseFloat(preco);
+        if (Number.isNaN(precoNumero) || precoNumero < 0) {
+            return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+        }
+
+        const isDisponivel = disponivel === true || disponivel === 'true';
+
+        const produto = new ProdutoModel(
+            null,
+            nome,
+            descricao,
+            categoria,
+            isDisponivel,
+            precoNumero,
+            null,
+            fornecedorId
+        );
+        const data = await produto.criar();
+        return res.status(201).json({ message: 'Registro criado com sucesso.', data });
+    } catch (err) {
+        const msg = err.message;
+        if (['Campo obrigatório não informado.', 'Categoria inválida.'].includes(msg)) {
+            return res.status(400).json({ error: msg });
+        }
+        return res.status(500).json({ error: 'Erro interno.' });
     }
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
 };
 
-export const listar = async (req, res) => {
-  try {
-    const registros = await ProdutoModel.buscarTodos(req.query);
-    return res.status(200).json(registros);
-  } catch (err) {
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
+export const buscarTodos = async (req, res) => {
+    try {
+        const filtros = {};
+
+        if (req.query.nome) {
+            filtros.nome = req.query.nome;
+        }
+
+        if (req.query.categoria) {
+            if (!CATEGORIAS_VALIDAS.includes(req.query.categoria)) {
+                return res.status(400).json({ error: 'Categoria inválida.' });
+            }
+            filtros.categoria = req.query.categoria;
+        }
+
+        if (req.query.disponivel !== undefined) {
+            if (req.query.disponivel !== 'true' && req.query.disponivel !== 'false') {
+                return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+            }
+            filtros.disponivel = req.query.disponivel;
+        }
+
+        const registros = await ProdutoModel.buscarTodos(filtros);
+        return res.json(registros);
+    } catch (err) {
+        return res.status(500).json({ error: 'Erro interno.' });
+    }
 };
 
-export const obter = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const registro = await ProdutoModel.buscarPorId(id);
-    if (!registro) return res.status(404).json({ error: 'Registro não encontrado.' });
-    return res.status(200).json(registro);
-  } catch (err) {
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
+export const buscarPorId = async (req, res) => {
+    try {
+        const id = parseId(req.params.id);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
+
+        const registro = await ProdutoModel.buscarPorId(id);
+        if (!registro) return res.status(404).json({ error: 'Registro não encontrado.' });
+        return res.json({ data: registro });
+    } catch (err) {
+        return res.status(500).json({ error: 'Erro interno.' });
+    }
 };
 
 export const atualizar = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = await ProdutoModel.atualizar(id, req.body);
-    return res.status(200).json(data);
-  } catch (err) {
-    const msg = err.message;
-    if (['Campo obrigatório não informado.', 'Categoria inválida.', 'Não é permitido utilizar item indisponível.'].includes(msg)) {
-      return res.status(400).json({ error: msg });
+    try {
+        const id = parseId(req.params.id);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
+
+        const produto = await ProdutoModel.buscarPorId(id);
+        if (!produto) {
+            return res.status(404).json({ error: 'Registro não encontrado.' });
+        }
+
+        if (produto.disponivel === false) {
+            return res.status(400).json({ error: 'Não é permitido utilizar item indisponível.' });
+        }
+
+        if (req.body.nome !== undefined) {
+            if (!String(req.body.nome).trim()) {
+                return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+            }
+            produto.nome = String(req.body.nome).trim();
+        }
+
+        if (req.body.descricao !== undefined) {
+            produto.descricao = req.body.descricao;
+        }
+
+        if (req.body.categoria !== undefined) {
+            if (!CATEGORIAS_VALIDAS.includes(req.body.categoria)) {
+                return res.status(400).json({ error: 'Categoria inválida.' });
+            }
+            produto.categoria = req.body.categoria;
+        }
+
+        if (req.body.preco !== undefined) {
+            const precoAtualizado = Number.parseFloat(req.body.preco);
+            if (Number.isNaN(precoAtualizado) || precoAtualizado < 0) {
+                return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+            }
+            produto.preco = precoAtualizado;
+        }
+
+        if (req.body.disponivel !== undefined) {
+            produto.disponivel = req.body.disponivel === true || req.body.disponivel === 'true';
+        }
+
+        if (req.body.fornecedorId !== undefined) {
+            produto.fornecedorId = req.body.fornecedorId;
+        }
+
+        const data = await produto.atualizar();
+        return res.json({ message: 'Registro atualizado com sucesso.', data });
+    } catch (err) {
+        const msg = err.message;
+        if (
+            [
+                'Campo obrigatório não informado.',
+                'Categoria inválida.',
+                'Não é permitido utilizar item indisponível.',
+            ].includes(msg)
+        ) {
+            return res.status(400).json({ error: msg });
+        }
+        if (msg === 'Registro não encontrado.') return res.status(404).json({ error: msg });
+        return res.status(500).json({ error: 'Erro interno.' });
     }
-    if (msg === 'Registro não encontrado.') return res.status(404).json({ error: msg });
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
 };
 
 export const deletar = async (req, res) => {
-  return res.status(200).json({ message: 'Produto deletado com sucesso!!' });
+    try {
+        const id = parseId(req.params.id);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
+
+        const produto = await ProdutoModel.buscarPorId(id);
+        if (!produto) {
+            return res.status(404).json({ error: 'Registro não encontrado.' });
+        }
+
+        if (produto.disponivel === false) {
+            return res.status(400).json({ error: 'Não é permitido utilizar item indisponível.' });
+        }
+
+        await produto.deletar();
+        return res.json({ message: 'Registro deletado com sucesso.' });
+    } catch (err) {
+        return res.status(500).json({ error: 'Erro interno.' });
+    }
 };
 
 export const uploadFoto = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'Campo obrigatório não informado.' });
+    try {
+        if (!req.file) return res.status(400).json({ error: 'Campo obrigatório não informado.' });
 
-    const { id } = req.params;
-    const produto = await ProdutoModel.buscarPorId(id);
-    if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
+        const id = parseId(req.params.id);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
 
-    // gerar nome e salvar
-    const filename = generateFileName();
-    const relativePath = await saveImage(req.file.buffer, filename, produto.foto);
+        const produto = await ProdutoModel.buscarPorId(id);
+        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
 
-    const atualizado = await ProdutoModel.atualizar(id, { foto: relativePath });
-    return res.status(200).json(atualizado);
-  } catch (err) {
-    const msg = err.message;
-    if (['Registro não encontrado.'].includes(msg)) return res.status(404).json({ error: msg });
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
+        // gerar nome e salvar
+        const filename = generateFileName();
+        const relativePath = await saveImage(req.file.buffer, filename, produto.foto);
+
+        const produtoParaAtualizar = new ProdutoModel(
+            id,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            relativePath,
+            undefined
+        );
+        const atualizado = await produtoParaAtualizar.atualizar();
+        return res
+            .status(200)
+            .json({ message: 'Registro atualizado com sucesso.', data: atualizado });
+    } catch (err) {
+        const msg = err.message;
+        if (['Registro não encontrado.'].includes(msg)) return res.status(404).json({ error: msg });
+        return res.status(500).json({ error: 'Erro interno.' });
+    }
 };
 
 export const pegarFoto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const produto = await ProdutoModel.buscarPorId(id);
-    if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
-    if (!produto.foto) return res.status(404).json({ error: 'Registro não encontrado.' });
-    return res.status(200).json({ foto: produto.foto });
-  } catch (err) {
-    return res.status(500).json({ error: 'Erro interno.' });
-  }
+    try {
+        const id = parseId(req.params.id);
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
+
+        const produto = await ProdutoModel.buscarPorId(id);
+        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
+        if (!produto.foto) return res.status(404).json({ error: 'Registro não encontrado.' });
+        return res.status(200).json({ foto: produto.foto });
+    } catch (err) {
+        return res.status(500).json({ error: 'Erro interno.' });
+    }
 };
+
+export const listar = buscarTodos;
+export const obter = buscarPorId;

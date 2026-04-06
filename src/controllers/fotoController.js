@@ -48,7 +48,8 @@ export const uploadFoto = async (req, res) => {
         }
 
         const caminhoProcessado = await processarFoto(req.file.path);
-        const data = await ProdutoModel.atualizar(id, { foto: caminhoProcessado });
+        const produtoParaAtualizar = new ProdutoModel({ id, foto: caminhoProcessado });
+        const data = await produtoParaAtualizar.atualizar();
 
         return res.status(200).json(data);
     } catch (err) {

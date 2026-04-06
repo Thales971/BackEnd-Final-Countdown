@@ -6,9 +6,7 @@ import expressJSDocSwagger from 'express-jsdoc-swagger';
 
 import apiKey from './utils/apiKey.js';
 import fornecedorRoutes from './routes/fornecedorRoutes.js';
-import produtoRoutes from './routes/produtoRoutes.js';
-import fotoRoute from './routes/fotoRoute.js';
-import pdfRoute from './routes/pdfRoute.js';
+import catalogoRoutes from './routes/catalogoRoutes.js';
 
 const app = express();
 app.use(cors());
@@ -42,9 +40,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/principal', apiKey, fornecedorRoutes);
 
 // rotas de produto/catálogo (sem autenticação)
-app.use('/catalogo', pdfRoute);
-app.use('/catalogo', fotoRoute);
-app.use('/catalogo', produtoRoutes);
+app.use('/catalogo', catalogoRoutes);
 
 app.get('/', (req, res) => res.send('🚀 API funcionando'));
 

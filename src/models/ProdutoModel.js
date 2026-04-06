@@ -1,125 +1,98 @@
 import prisma from '../utils/prismaClient.js';
 
-const CATEGORIAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
-
 export default class ProdutoModel {
-    static async criar(payload) {
-        const { nome, descricao, categoria, disponivel = true, preco, fornecedorId } = payload;
+    constructor(
+        id = null,
+        nome,
+        descricao = null,
+        categoria,
+        disponivel = null,
+        preco,
+        foto = null,
+        fornecedorId = null
+    ) {
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.categoria = categoria;
+        this.disponivel = disponivel;
+        this.preco = Number(preco);
+        this.foto = foto;
+        this.fornecedorId = fornecedorId;
+    }
 
-        if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
+    async criar() {
+        return prisma.produto.create({
+            data: {
+                nome: this.nome,
+                descricao: this.descricao,
+                categoria: this.categoria,
+                disponivel: Boolean(this.disponivel),
+                preco: this.preco,
+                fornecedorId: this.fornecedorId,
+            },
+        });
+    }
 
-        if (!categoria || !CATEGORIAS.includes(categoria)) {
-            throw new Error('Categoria inválida.');
-        }
+    async atualizar() {
+        return prisma.produto.update({
+            where: { id: this.id },
+            data: {
+                nome: this.nome,
+                descricao: this.descricao,
+                categoria: this.categoria,
+                preco: this.preco,
+                disponivel: Boolean(this.disponivel),
+                foto: this.foto,
+                fornecedorId: this.fornecedorId,
+            },
+        });
+    }
 
-        if (preco === undefined || preco === null || Number(preco) < 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        const data = {
-            nome: nome.trim(),
-            descricao: descricao || null,
-            categoria,
-            disponivel: Boolean(disponivel),
-            preco: Number(preco),
-            foto: null,
-            fornecedorId: fornecedorId || null,
-        };
-
-        return prisma.produto.create({ data });
+    async deletar() {
+        return prisma.produto.delete({ where: { id: this.id } });
     }
 
     static async buscarTodos(filtros = {}) {
         const where = {};
 
         if (filtros.nome) {
-            where.nome = { contains: String(filtros.nome), mode: 'insensitive' };
+            where.nome = { contains: filtros.nome, mode: 'insensitive' };
         }
-
         if (filtros.categoria) {
             where.categoria = filtros.categoria;
         }
-
         if (filtros.disponivel !== undefined) {
             where.disponivel = filtros.disponivel === 'true' || filtros.disponivel === true;
+        }
+
+        if (filtros.precoMin !== undefined || filtros.precoMax !== undefined) {
+            where.preco = {};
+            if (filtros.precoMin !== undefined) {
+                where.preco.gte = Number(filtros.precoMin);
+            }
+            if (filtros.precoMax !== undefined) {
+                where.preco.lte = Number(filtros.precoMax);
+            }
         }
 
         return prisma.produto.findMany({ where });
     }
 
     static async buscarPorId(id) {
-        const intId = Number.parseInt(id, 10);
-        if (Number.isNaN(intId)) {
+        const dados = await prisma.produto.findUnique({ where: { id } });
+        if (!dados) {
             return null;
         }
-
-        const data = await prisma.produto.findUnique({ where: { id: intId } });
-        return data || null;
-    }
-
-    static async atualizar(id, payload) {
-        const intId = Number.parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.produto.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.disponivel === false) {
-            throw new Error('Não é permitido utilizar item indisponível.');
-        }
-
-        const { nome, descricao, categoria, disponivel, preco, fornecedorId, foto } = payload;
-
-        if (categoria !== undefined && !CATEGORIAS.includes(categoria)) {
-            throw new Error('Categoria inválida.');
-        }
-
-        if (preco !== undefined && Number(preco) < 0) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        if (
-            (disponivel === true || (disponivel === undefined && existente.disponivel === true)) &&
-            !existente.foto &&
-            !foto
-        ) {
-            throw new Error('Campo obrigatório não informado.');
-        }
-
-        const data = {
-            nome: nome !== undefined ? String(nome).trim() : existente.nome,
-            descricao: descricao !== undefined ? descricao : existente.descricao,
-            categoria: categoria !== undefined ? categoria : existente.categoria,
-            disponivel: disponivel !== undefined ? Boolean(disponivel) : existente.disponivel,
-            preco: preco !== undefined ? Number(preco) : existente.preco,
-            fornecedorId: fornecedorId !== undefined ? fornecedorId : existente.fornecedorId,
-            foto: foto !== undefined ? foto : existente.foto,
-        };
-
-        return prisma.produto.update({ where: { id: intId }, data });
-    }
-
-    static async deletar(id) {
-        const intId = Number.parseInt(id, 10);
-        if (Number.isNaN(intId)) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        const existente = await prisma.produto.findUnique({ where: { id: intId } });
-        if (!existente) {
-            throw new Error('Registro não encontrado.');
-        }
-
-        if (existente.disponivel === false) {
-            throw new Error('Não é permitido utilizar item indisponível.');
-        }
-
-        return prisma.produto.delete({ where: { id: intId } });
+        return new ProdutoModel(
+            dados.id,
+            dados.nome,
+            dados.descricao,
+            dados.categoria,
+            dados.disponivel,
+            dados.preco,
+            dados.foto,
+            dados.fornecedorId
+        );
     }
 }
