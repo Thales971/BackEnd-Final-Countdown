@@ -60,20 +60,21 @@ export default class FornecedorModel {
         this.cep = cepLimpo;
     }
 
-    async preencherEnderecoPorCep() {
+    async enderecoPorCep() {
         if (!this.cep) return;
 
-        let cepLimpo = '';
+        let cep = '';
         const cepString = String(this.cep);
         for (let i = 0; i < cepString.length; i++) {
             const caractere = cepString[i];
             if (caractere >= '0' && caractere <= '9') {
-                cepLimpo += caractere;
+                cep += caractere;
             }
         }
 
         try {
-            const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+            const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json`);
+
             const dados = await resposta.json();
 
             if (dados.erro) {
@@ -85,14 +86,13 @@ export default class FornecedorModel {
             this.localidade = dados.localidade || null;
             this.uf = dados.uf || null;
         } catch (error) {
-            if (error.message === 'CEP não encontrado.') throw error;
-            throw new Error('Serviço externo indisponível.');
+            throw new Error('Erro ao buscar endereco pelo CEP: ' + error.message);
         }
     }
 
     async criar() {
         this.validacao();
-        await this.preencherEnderecoPorCep();
+        await this.enderecoPorCep();
 
         return prisma.fornecedor.create({
             data: {
@@ -116,7 +116,7 @@ export default class FornecedorModel {
         }
 
         this.validacao();
-        if (this.cep) await this.preencherEnderecoPorCep();
+        if (this.cep) await this.enderecoPorCep();
 
         return prisma.fornecedor.update({
             where: { id: this.id },

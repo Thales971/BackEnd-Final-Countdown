@@ -1,71 +1,58 @@
-import fs from 'fs';
-import path from 'path';
 import ProdutoModel from '../models/ProdutoModel.js';
+import fs from 'fs/promises';
 import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
+
+export const uploadFoto = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+        }
+
+        const { id } = req.params;
+
+        if (isNaN(id)) return res.status(400).json({ error: 'O ID enviado n„o È um n˙mero v·lido.' });
+
+        const produto = await ProdutoModel.buscarPorId(parseInt(id, 10));
+        if (!produto) {
+            removerFoto(req.file.path);
+            return res.status(404).json({ error: 'Registro do produto n„o encontrado.' });
+        }
+
+        if (produto.foto) {
+            await fs.unlink(produto.foto).catch(() => { });
+        }
+
+        produto.foto = await processarFoto(req.file.path);
+        await produto.atualizar();
+
+        return res.status(201).json({ message: 'Foto salva com sucesso!', foto: produto.foto });
+    } catch (error) {
+        console.error('Erro ao salvar foto:', error);
+        return res.status(500).json({ error: 'Erro interno ao salvar o registro da foto.' });
+    }
+};
 
 export const verFoto = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const produto = await ProdutoModel.buscarPorId(id);
-
-        if (!produto || !produto.foto) {
-            return res.status(404).json({ error: 'Registro n√£o encontrado.' });
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'O ID enviado n„o È um n˙mero v·lido.' });
         }
 
-        const caminho = path.isAbsolute(produto.foto)
-            ? produto.foto
-            : path.resolve(process.cwd(), produto.foto);
-
-        return res.sendFile(caminho);
-    } catch (err) {
-        return res.status(500).json({ error: 'Erro interno.' });
-    }
-};
-
-export const uploadFoto = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'Campo obrigat√≥rio n√£o informado.' });
-        }
-
-        const { id } = req.params;
-
-        const produto = await ProdutoModel.buscarPorId(id);
+        const produto = await ProdutoModel.buscarPorId(parseInt(id, 10));
 
         if (!produto) {
-            removerFoto(req.file.path);
-            return res.status(404).json({ error: 'Registro n√£o encontrado.' });
+            return res.status(404).json({ error: 'Registro do produto n„o encontrado.' });
         }
 
-        if (produto.foto) {
-            const fotoAntiga = path.isAbsolute(produto.foto)
-                ? produto.foto
-                : path.resolve(process.cwd(), produto.foto);
-            if (fs.existsSync(fotoAntiga)) {
-                fs.unlinkSync(fotoAntiga);
-            }
+        if (!produto.foto) {
+            return res.status(404).json({ error: 'Foto do produto n„o encontrada.'})
         }
 
-        const caminhoProcessado = await processarFoto(req.file.path);
-        const produtoParaAtualizar = new ProdutoModel({ id, foto: caminhoProcessado });
-        const data = await produtoParaAtualizar.atualizar();
-
-        return res.status(200).json(data);
-    } catch (err) {
-        if (req.file) {
-            removerFoto(req.file.path);
-        }
-
-        const msg = err.message;
-        if (msg === 'Registro n√£o encontrado.') {
-            return res.status(404).json({ error: msg });
-        }
-
-        if (msg === 'N√£o √© permitido utilizar item indispon√≠vel.') {
-            return res.status(400).json({ error: msg });
-        }
-
-        return res.status(500).json({ error: 'Erro interno.' });
+        return res.sendFile(produto.foto, { root: '.'});
+    } catch (error) {
+        console.error('Erro ao buscar foto do produto:', error);
+        return res.status(500).json({ error: 'Erro ao buscar foto do produto.' });
     }
 };

@@ -1,7 +1,8 @@
 ﻿import express from 'express';
 import * as produtoCtrl from '../controllers/produtoController.js';
 import * as pdfCtrl from '../controllers/pdfController.js';
-import { upload } from '../utils/upload.js';
+import * as fotoCtrl from '../controllers/fotoController.js';
+import { upload } from '../utils/fotoHelper.js';
 
 const router = express.Router();
 
@@ -15,7 +16,6 @@ router.delete('/:id', produtoCtrl.deletar);
 router.get('/:id/pdf', pdfCtrl.gerarRelatorioIndividual);
 
 // Foto
-router.post('/:id/foto', upload.single('foto'), produtoCtrl.uploadFoto);
-router.get('/:id/foto', produtoCtrl.pegarFoto);
-
+router.post('/:id/foto', upload.single('foto'), fotoCtrl.uploadFoto);
+router.get('/:id/foto', fotoCtrl.verFoto);
 export default router;

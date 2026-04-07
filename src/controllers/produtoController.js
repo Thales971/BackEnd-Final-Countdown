@@ -1,5 +1,4 @@
 import ProdutoModel from '../models/ProdutoModel.js';
-import { saveImage, generateFileName } from '../utils/upload.js';
 
 const CATEGORIAS_VALIDAS = ['ELETRONICOS', 'VESTUARIO', 'ALIMENTOS', 'MOVEIS'];
 const parseId = (value) => Number.parseInt(value, 10);
@@ -178,59 +177,6 @@ export const deletar = async (req, res) => {
 
         await produto.deletar();
         return res.json({ message: 'Registro deletado com sucesso.' });
-    } catch (err) {
-        return res.status(500).json({ error: 'Erro interno.' });
-    }
-};
-
-export const uploadFoto = async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: 'Campo obrigatório não informado.' });
-
-        const id = parseId(req.params.id);
-        if (Number.isNaN(id)) {
-            return res.status(400).json({ error: 'ID inválido.' });
-        }
-
-        const produto = await ProdutoModel.buscarPorId(id);
-        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
-
-        // gerar nome e salvar
-        const filename = generateFileName();
-        const relativePath = await saveImage(req.file.buffer, filename, produto.foto);
-
-        const produtoParaAtualizar = new ProdutoModel(
-            id,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            relativePath,
-            undefined
-        );
-        const atualizado = await produtoParaAtualizar.atualizar();
-        return res
-            .status(200)
-            .json({ message: 'Registro atualizado com sucesso.', data: atualizado });
-    } catch (err) {
-        const msg = err.message;
-        if (['Registro não encontrado.'].includes(msg)) return res.status(404).json({ error: msg });
-        return res.status(500).json({ error: 'Erro interno.' });
-    }
-};
-
-export const pegarFoto = async (req, res) => {
-    try {
-        const id = parseId(req.params.id);
-        if (Number.isNaN(id)) {
-            return res.status(400).json({ error: 'ID inválido.' });
-        }
-
-        const produto = await ProdutoModel.buscarPorId(id);
-        if (!produto) return res.status(404).json({ error: 'Registro não encontrado.' });
-        if (!produto.foto) return res.status(404).json({ error: 'Registro não encontrado.' });
-        return res.status(200).json({ foto: produto.foto });
     } catch (err) {
         return res.status(500).json({ error: 'Erro interno.' });
     }
