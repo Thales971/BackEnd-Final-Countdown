@@ -7,6 +7,7 @@ import expressJSDocSwagger from 'express-jsdoc-swagger';
 import apiKey from './utils/apiKey.js';
 import fornecedorRoutes from './routes/fornecedorRoutes.js';
 import catalogoRoutes from './routes/catalogoRoutes.js';
+import pdfRoute from './routes/pdfRoute.js';
 
 const app = express();
 app.use(cors());
@@ -41,6 +42,7 @@ app.use('/principal', apiKey, fornecedorRoutes);
 
 // rotas de produto/catálogo (sem autenticação)
 app.use('/catalogo', catalogoRoutes);
+app.use('/pdf', pdfRoute);
 
 app.get('/', (req, res) => res.send('🚀 API funcionando'));
 
