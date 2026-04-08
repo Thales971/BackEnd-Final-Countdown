@@ -1,20 +1,20 @@
-import prisma from '../utils/prismaClient.js';
+﻿import prisma from '../utils/prismaClient.js';
 
 export default class FornecedorModel {
-    constructor(
+    constructor({
         id = null,
         nome,
-        email,
-        telefone,
-        cnpj,
-        cep,
-        logradouro,
-        bairro,
-        localidade,
-        uf,
+        email = null,
+        telefone = null,
+        cnpj = null,
+        cep = null,
+        logradouro = null,
+        bairro = null,
+        localidade = null,
+        uf = null,
         ativo = true,
-        produtos = []
-    ) {
+        produtos = [],
+    } = {}) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -29,7 +29,7 @@ export default class FornecedorModel {
         this.produtos = produtos;
     }
 
-    validacao() {
+    validar() {
         if (!this.nome || this.nome.length < 3 || this.nome.length > 100) {
             throw new Error('Campo obrigatório não informado.');
         }
@@ -39,7 +39,7 @@ export default class FornecedorModel {
         }
 
         if (this.ativo === false) {
-            throw new Error('Operação não permitida para registro inativo.');
+            throw new Error('Operação não permitida: registro inativo');
         }
 
         let cepLimpo = '';
@@ -91,10 +91,10 @@ export default class FornecedorModel {
     }
 
     async criar() {
-        this.validacao();
+        this.validar();
         await this.enderecoPorCep();
 
-        return prisma.fornecedor.create({
+        const registro = await prisma.fornecedor.create({
             data: {
                 nome: this.nome,
                 email: this.email,
@@ -108,14 +108,21 @@ export default class FornecedorModel {
                 ativo: this.ativo,
             },
         });
+
+        this.id = registro.id;
+        return registro;
     }
 
     async atualizar() {
-        if (this.ativo === false) {
-            throw new Error('Operação não permitida para registro inativo.');
+        if (!this.id) {
+            throw new Error('ID do fornecedor é necessário para a atualização.');
         }
 
-        this.validacao();
+        if (this.ativo === false) {
+            throw new Error('Operação não permitida: registro inativo');
+        }
+
+        this.validar();
         if (this.cep) await this.enderecoPorCep();
 
         return prisma.fornecedor.update({
@@ -137,9 +144,8 @@ export default class FornecedorModel {
 
     async deletar() {
         if (this.ativo === false) {
-            throw new Error('Operação não permitida para registro inativo.');
+            throw new Error('Operação não permitida: registro inativo');
         }
-
         return prisma.fornecedor.delete({ where: { id: this.id } });
     }
 
@@ -159,28 +165,15 @@ export default class FornecedorModel {
         }
 
         if (filtros.ativo !== undefined) {
-            where.ativo = filtros.ativo === 'true' || filtros.ativo === true;
+            where.ativo = String(filtros.ativo) === 'true';
         }
 
         return prisma.fornecedor.findMany({ where });
     }
 
     static async buscarPorId(id) {
-        const data = await prisma.fornecedor.findUnique({ where: { id } });
+        const data = await prisma.fornecedor.findUnique({ where: { id: Number(id) } });
         if (!data) return null;
-        return new FornecedorModel(
-            data.id,
-            data.nome,
-            data.email,
-            data.telefone,
-            data.cnpj,
-            data.cep,
-            data.logradouro,
-            data.bairro,
-            data.localidade,
-            data.uf,
-            data.ativo,
-            data.produtos
-        );
+        return new FornecedorModel(data);
     }
 }
