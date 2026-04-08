@@ -1,12 +1,13 @@
-import 'dotenv/config';
+﻿import 'dotenv/config'
 
-export default function apiKey(req, res, next) {
-    const expected = process.env.API_KEY;
-    const provided = req.header('X-API-Key') || req.header('x-api-key');
+const autenticar = (req, res, next) => {
+    const chave = req.headers['x-api-key'];
 
-    if (!expected || !provided || provided !== expected) {
-        return res.status(401).json({ error: 'Acesso negado.' });
+    if (!chave || chave !== process.env.API_KEY) {
+        return res.status(401).json({ error: 'Acesso não autorizado. Chave de API inválida' })
     }
 
-    return next();
+    next();
 }
+
+export default autenticar;

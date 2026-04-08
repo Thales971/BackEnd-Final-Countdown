@@ -1,62 +1,43 @@
-import express from 'express';
+﻿import express from 'express';
 import 'dotenv/config';
-import cors from 'cors';
-import path from 'path';
-import expressJSDocSwagger from 'express-jsdoc-swagger';
-
-import apiKey from './utils/apiKey.js';
 import fornecedorRoutes from './routes/fornecedorRoutes.js';
 import catalogoRoutes from './routes/catalogoRoutes.js';
 import pdfRoute from './routes/pdfRoute.js';
+import docApiSwagger from 'express-jsdoc-swagger';
+import autenticar from './utils/apiKey.js';
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-const swaggerOptions = {
+docApiSwagger(app)({
     info: {
+        title: 'API Final Countdown - Documentação Swagger',
         version: '1.0.0',
-        title: 'API Final Countdown',
-        description: 'API REST do tema Produtos e Fornecedores.',
+        description:
+            'Uma API projetada para o controle essencial de cadastros de produtos e fornecedores corporativos.',
     },
-    servers: [{ url: `http://localhost:${PORT}` }],
-    baseDir: process.cwd(),
-    filesPattern: './src/controllers/*.js',
-    exposeApiDocs: true,
-    apiDocsPath: '/api-docs.json',
-    swaggerUIPath: '/api-docs',
-    exposeSwaggerUI: true,
-    notRequiredAsNullable: false,
-};
+    baseDir: import.meta.dirname,
+    filesPattern: './**/*.js',
+});
 
-expressJSDocSwagger(app)(swaggerOptions);
+app.get('/', (req, res) => {
+    res.send('🚀 API funcionando');
+});
 
-// servir arquivos estáticos (uploads)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Rotas
+app.use('/api/fornecedores', autenticar, fornecedorRoutes);
+app.use('/api/produtos', catalogoRoutes);
+app.use('/api/pdfs', pdfRoute);
 
-// rotas
-// todas as rotas /principal exigem X-API-Key (middleware apiKey)
-app.use('/principal', apiKey, fornecedorRoutes);
-
-// rotas de produto/catálogo (sem autenticação)
-app.use('/catalogo', catalogoRoutes);
-app.use('/pdf', pdfRoute);
-
-app.get('/', (req, res) => res.send('🚀 API funcionando'));
+// Arquivos estáticos
+app.use('/', express.static('uploads'));
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({ error: 'Erro interno.' });
-});
-
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-    console.log(`Swagger disponível em http://localhost:${PORT}/api-docs`);
-    console.log(`OpenAPI JSON em http://localhost:${PORT}/api-docs.json`);
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
