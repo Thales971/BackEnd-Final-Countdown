@@ -1,7 +1,31 @@
-import ProdutoModel from '../models/ProdutoModel.js';
+﻿import ProdutoModel from '../models/ProdutoModel.js';
 import fs from 'fs/promises';
 import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
 
+// ==============================================================================
+// EXPLICAÇÃO DO SWAGGER (JSDoc)
+// Os blocos de comentários abaixo (/** ... */) são utilizados pela biblioteca
+// 'express-jsdoc-swagger' para desenhar a interface da documentação na rota /api-docs.
+// Anotações como @tags (agrupamento), @summary (título), @description (detalhes),
+// e @param (variáveis da requisição) permitem que o Swagger crie botões visuais
+// onde desenvolvedores podem testar as rotas da API diretamente pelo navegador.
+// No caso da rota de foto, o @consumes multipart/form-data libera o botão de "Escolher Arquivo".
+// ==============================================================================
+
+/**
+ * POST /api/produtos/{id}/foto
+ * @tags Produtos
+ * @summary Faz o upload da foto de um produto
+ * @description EndPoint responsável por anexar uma foto a um produto existente a partir do ID. A imagem é redimensionada e otimizada (JPEG).
+ * @param {integer} id.path.required
+ * @param {file} foto.formData.required - Imagem do produto
+ * @consumes multipart/form-data
+ *
+ * @return 201 - Foto salva com sucesso
+ * @return 400 - ID inválido ou nenhuma imagem enviada
+ * @return 404 - Registro do produto não encontrado
+ * @return 500 - Erro interno ao salvar o registro da foto
+ */
 export const uploadFoto = async (req, res) => {
     try {
         if (!req.file) {
@@ -10,16 +34,18 @@ export const uploadFoto = async (req, res) => {
 
         const { id } = req.params;
 
-        if (isNaN(id)) return res.status(400).json({ error: 'O ID enviado n�o � um n�mero v�lido.' });
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'O ID enviado não é um número válido.' });
+        }
 
         const produto = await ProdutoModel.buscarPorId(parseInt(id, 10));
         if (!produto) {
             removerFoto(req.file.path);
-            return res.status(404).json({ error: 'Registro do produto n�o encontrado.' });
+            return res.status(404).json({ error: 'Registro do produto não encontrado.' });
         }
 
         if (produto.foto) {
-            await fs.unlink(produto.foto).catch(() => { });
+            await fs.unlink(produto.foto).catch(() => {});
         }
 
         produto.foto = await processarFoto(req.file.path);
@@ -32,25 +58,37 @@ export const uploadFoto = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/produtos/{id}/foto
+ * @tags Produtos
+ * @summary Visualiza a foto de um produto
+ * @description EndPoint responsável por retornar o arquivo de imagem associado ao produto correspondente ao ID.
+ * @param {integer} id.path.required
+ *
+ * @return 200 - Arquivo de imagem do produto
+ * @return 400 - ID inválido
+ * @return 404 - Registro do produto ou foto não encontrada
+ * @return 500 - Erro interno ao buscar foto
+ */
 export const verFoto = async (req, res) => {
     try {
         const { id } = req.params;
 
         if (isNaN(id)) {
-            return res.status(400).json({ error: 'O ID enviado n�o � um n�mero v�lido.' });
+            return res.status(400).json({ error: 'O ID enviado não é um número válido.' });
         }
 
         const produto = await ProdutoModel.buscarPorId(parseInt(id, 10));
 
         if (!produto) {
-            return res.status(404).json({ error: 'Registro do produto n�o encontrado.' });
+            return res.status(404).json({ error: 'Registro do produto não encontrado.' });
         }
 
         if (!produto.foto) {
-            return res.status(404).json({ error: 'Foto do produto n�o encontrada.'})
+            return res.status(404).json({ error: 'Foto do produto não encontrada.' });
         }
 
-        return res.sendFile(produto.foto, { root: '.'});
+        return res.sendFile(produto.foto, { root: '.' });
     } catch (error) {
         console.error('Erro ao buscar foto do produto:', error);
         return res.status(500).json({ error: 'Erro ao buscar foto do produto.' });
