@@ -11,7 +11,7 @@
  */
 
 /**
- * POST /api/fornecedores
+ * POST /principal
  * @tags Fornecedores
  * @summary Cria um novo registro de fornecedor
  * @description EndPoint responsável por cadastrar um novo fornecedor no sistema web.
@@ -75,7 +75,7 @@ export const criar = async (req, res) => {
 };
 
 /**
- * GET /api/fornecedores
+ * GET /principal
  * @tags Fornecedores
  * @summary Busca todos os registros de fornecedores
  * @description EndPoint responsável por buscar fornecedores cadastrados no sistema web.
@@ -106,7 +106,7 @@ export const buscarTodos = async (req, res) => {
 };
 
 /**
- * GET /api/fornecedores/{id}
+ * GET /principal/{id}
  * @tags Fornecedores
  * @summary Busca um registro de fornecedor por ID
  * @description EndPoint responsável por buscar um fornecedor específico cadastrado no sistema web a partir do ID.
@@ -139,7 +139,7 @@ export const buscarPorId = async (req, res) => {
 };
 
 /**
- * PUT /api/fornecedores/{id}
+ * PUT /principal/{id}
  * @tags Fornecedores
  * @summary Atualiza um registro de fornecedor por ID
  * @description Endpoint responsável por atualizar fornecedor específico pelo seu ID.
@@ -201,7 +201,7 @@ export const atualizar = async (req, res) => {
             [
                 'CEP inválido.',
                 'CEP não encontrado.',
-                'Operação não permitida: registro inativo',
+                'Operação não permitida para registro inativo.',
                 'Campo obrigatório não informado.',
             ].includes(msg)
         ) {
@@ -212,7 +212,7 @@ export const atualizar = async (req, res) => {
 };
 
 /**
- * DELETE /api/fornecedores/{id}
+ * DELETE /principal/{id}
  * @tags Fornecedores
  * @summary Deleta um registro de fornecedor por ID
  * @description Endpoint responsável por deletar fornecedor específico pelo seu ID.
@@ -246,7 +246,7 @@ export const deletar = async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar:', error);
         const msg = error.message;
-        if (msg === 'Operação não permitida: registro inativo') {
+        if (msg === 'Operação não permitida para registro inativo.') {
             return res.status(400).json({ error: msg });
         }
         return res.status(500).json({ error: 'Erro ao deletar fornecedor.' });

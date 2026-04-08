@@ -39,7 +39,7 @@ export default class FornecedorModel {
         }
 
         if (this.ativo === false) {
-            throw new Error('Operação não permitida: registro inativo');
+            throw new Error('Operação não permitida para registro inativo.');
         }
 
         let cepLimpo = '';
@@ -119,7 +119,7 @@ export default class FornecedorModel {
         }
 
         if (this.ativo === false) {
-            throw new Error('Operação não permitida: registro inativo');
+            throw new Error('Operação não permitida para registro inativo.');
         }
 
         this.validar();
@@ -144,7 +144,7 @@ export default class FornecedorModel {
 
     async deletar() {
         if (this.ativo === false) {
-            throw new Error('Operação não permitida: registro inativo');
+            throw new Error('Operação não permitida para registro inativo.');
         }
         return prisma.fornecedor.delete({ where: { id: this.id } });
     }

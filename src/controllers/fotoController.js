@@ -13,7 +13,7 @@ import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
 // ==============================================================================
 
 /**
- * POST /api/produtos/{id}/foto
+ * POST /catalogo/{id}/foto
  * @tags Produtos
  * @summary Faz o upload da foto de um produto
  * @description EndPoint responsável por anexar uma foto a um produto existente a partir do ID. A imagem é redimensionada e otimizada (JPEG).
@@ -59,7 +59,7 @@ export const uploadFoto = async (req, res) => {
 };
 
 /**
- * GET /api/produtos/{id}/foto
+ * GET /catalogo/{id}/foto
  * @tags Produtos
  * @summary Visualiza a foto de um produto
  * @description EndPoint responsável por retornar o arquivo de imagem associado ao produto correspondente ao ID.

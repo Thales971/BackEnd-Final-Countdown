@@ -4,7 +4,7 @@ const autenticar = (req, res, next) => {
     const chave = req.headers['x-api-key'];
 
     if (!chave || chave !== process.env.API_KEY) {
-        return res.status(401).json({ error: 'Acesso não autorizado. Chave de API inválida' })
+        return res.status(401).json({ error: 'Acesso negado.' })
     }
 
     next();

@@ -16,7 +16,7 @@ import { gerarPdfProduto, gerarPdfTodos } from '../utils/pdfHelper.js';
  */
 
 /**
- * GET /pdf/relatorio/todos
+ * GET /catalogo/pdf
  * @tags Relatórios
  * @summary Busca todos os registros de relatório e os converte para PDF
  * @description EndPoint responsável por buscar produtos cadastrados e transformá-los em PDF
@@ -48,7 +48,7 @@ export const relatorioTodos = async (req, res) => {
 };
 
 /**
- * GET /pdf/relatorio/{id}
+ * GET /catalogo/{id}/pdf
  * @tags Relatórios
  * @summary Busca um registro e converte-o para PDF através do ID
  * @description EndPoint responsável por buscar produtos por ID e transformá-los em PDF

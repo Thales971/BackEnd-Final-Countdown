@@ -14,7 +14,7 @@ const parseId = (value) => Number.parseInt(value, 10);
  */
 
 /**
- * POST /api/produtos
+ * POST /catalogo
  * @tags Produtos
  * @summary Cria um novo registro de produto
  * @description EndPoint responsável por cadastrar um novo produto no sistema web.
@@ -70,7 +70,7 @@ export const criar = async (req, res) => {
 };
 
 /**
- * GET /api/produtos
+ * GET /catalogo
  * @tags Produtos
  * @summary Busca todos os registros de produtos
  * @description EndPoint responsável por buscar produtos cadastrados no sistema web.
@@ -114,7 +114,7 @@ export const buscarTodos = async (req, res) => {
 };
 
 /**
- * GET /api/produtos/{id}
+ * GET /catalogo/{id}
  * @tags Produtos
  * @summary Busca um registro de produto por ID
  * @description EndPoint responsável por buscar um produto específico cadastrado no sistema web a partir do ID.
@@ -146,7 +146,7 @@ export const buscarPorId = async (req, res) => {
 };
 
 /**
- * PUT /api/produtos/{id}
+ * PUT /catalogo/{id}
  * @tags Produtos
  * @summary Atualiza um registro de produto por ID
  * @description Endpoint responsável por atualizar produto específico pelo seu ID.
@@ -217,7 +217,7 @@ export const atualizar = async (req, res) => {
 };
 
 /**
- * DELETE /api/produtos/{id}
+ * DELETE /catalogo/{id}
  * @tags Produtos
  * @summary Deleta um registro de produto por ID
  * @description Endpoint responsável por deletar produto específico pelo seu ID.
