@@ -73,7 +73,11 @@ export default class FornecedorModel {
         }
 
         try {
-            const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json`);
+            const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+
+            if (!resposta.ok) {
+                throw new Error('Serviço externo indisponível.');
+            }
 
             const dados = await resposta.json();
 
@@ -86,7 +90,14 @@ export default class FornecedorModel {
             this.localidade = dados.localidade || null;
             this.uf = dados.uf || null;
         } catch (error) {
-            throw new Error('Erro ao buscar endereco pelo CEP: ' + error.message);
+            if (
+                error.message === 'CEP não encontrado.' ||
+                error.message === 'Serviço externo indisponível.'
+            ) {
+                throw error;
+            }
+
+            throw new Error('Serviço externo indisponível.');
         }
     }
 

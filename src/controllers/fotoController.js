@@ -2,15 +2,13 @@
 import fs from 'fs/promises';
 import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
 
-// ==============================================================================
-// EXPLICAÇÃO DO SWAGGER (JSDoc)
-// Os blocos de comentários abaixo (/** ... */) são utilizados pela biblioteca
-// 'express-jsdoc-swagger' para desenhar a interface da documentação na rota /api-docs.
-// Anotações como @tags (agrupamento), @summary (título), @description (detalhes),
-// e @param (variáveis da requisição) permitem que o Swagger crie botões visuais
-// onde desenvolvedores podem testar as rotas da API diretamente pelo navegador.
-// No caso da rota de foto, o @consumes multipart/form-data libera o botão de "Escolher Arquivo".
-// ==============================================================================
+// ============================================================================
+// Estes comentários alimentam a documentação automática do Swagger.
+// Eu uso @tags, @summary, @description e @param para explicar a rota de forma
+// clara na tela de testes em /api-docs.
+// No caso do upload, o @consumes multipart/form-data é o que faz o Swagger
+// mostrar o campo de arquivo para enviar a foto.
+// ============================================================================
 
 /**
  * POST /catalogo/{id}/foto
@@ -42,6 +40,11 @@ export const uploadFoto = async (req, res) => {
         if (!produto) {
             removerFoto(req.file.path);
             return res.status(404).json({ error: 'Registro do produto não encontrado.' });
+        }
+
+        if (!produto.disponivel) {
+            removerFoto(req.file.path);
+            return res.status(400).json({ error: 'Item indisponível.' });
         }
 
         if (produto.foto) {

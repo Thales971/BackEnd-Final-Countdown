@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import fornecedorRoutes from './routes/fornecedorRoutes.js';
 import catalogoRoutes from './routes/catalogoRoutes.js';
+import fotoRoute from './routes/fotoRoute.js';
+import pdfRoute from './routes/pdfRoute.js';
 import docApiSwagger from 'express-jsdoc-swagger';
 import autenticar from './utils/apiKey.js';
 
@@ -27,6 +29,8 @@ app.get('/', (req, res) => {
 
 // Rotas
 app.use('/principal', autenticar, fornecedorRoutes);
+app.use('/', fotoRoute);
+app.use('/', pdfRoute);
 app.use('/catalogo', catalogoRoutes);
 
 // Arquivos estáticos

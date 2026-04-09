@@ -1,15 +1,12 @@
 ﻿import ProdutoModel from '../models/ProdutoModel.js';
 import { gerarPdfProduto, gerarPdfTodos } from '../utils/pdfHelper.js';
 
-// ==============================================================================
-// EXPLICAÇÃO DO SWAGGER (JSDoc)
-// Os blocos de comentários abaixo (/** ... */) são utilizados pela biblioteca
-// 'express-jsdoc-swagger' para desenhar a interface da documentação na rota /api-docs.
-// Anotações como @tags (agrupamento), @summary (título), @description (detalhes),
-// e @param (variáveis da requisição) permitem documentar interativamente o formato.
-// No caso da rota de PDF, eles mapeiam quais retornos esperar (como arquivo)
-// e os eventuais status (200, 404, 500) caso relatórios não existam na base de dados.
-// ==============================================================================
+// ============================================================================
+// Estes comentários servem para o Swagger entender e mostrar as rotas de PDF
+// de forma automática na documentação.
+// Com @tags, @summary, @description e @param eu deixo claro o que cada
+// endpoint recebe e devolve, incluindo os casos de erro e o PDF gerado.
+// ============================================================================
 
 /**
  * @typedef {object} reqBodyPdf

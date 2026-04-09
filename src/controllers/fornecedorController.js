@@ -70,6 +70,9 @@ export const criar = async (req, res) => {
         ) {
             return res.status(400).json({ error: msg });
         }
+        if (msg === 'Serviço externo indisponível.') {
+            return res.status(400).json({ error: msg });
+        }
         return res.status(500).json({ error: 'Erro interno ao salvar o registro.' });
     }
 };
@@ -205,6 +208,9 @@ export const atualizar = async (req, res) => {
                 'Campo obrigatório não informado.',
             ].includes(msg)
         ) {
+            return res.status(400).json({ error: msg });
+        }
+        if (msg === 'Serviço externo indisponível.') {
             return res.status(400).json({ error: msg });
         }
         return res.status(500).json({ error: 'Erro ao atualizar fornecedor.' });
