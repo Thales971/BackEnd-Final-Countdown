@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     },
 });
 
-export const upload = multer({ storage }); // multer({ dest: 'uploads/' });
+export const upload = multer({ storage });
 
 export async function processarFoto(filePath) {
     const processado = await sharp(fs.readFileSync(filePath))

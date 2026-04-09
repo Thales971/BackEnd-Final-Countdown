@@ -1,26 +1,20 @@
 ﻿import ProdutoModel from '../models/ProdutoModel.js';
 import { gerarPdfProduto, gerarPdfTodos } from '../utils/pdfHelper.js';
 
-// ============================================================================
-// Estes comentários servem para o Swagger entender e mostrar as rotas de PDF
-// de forma automática na documentação.
-// Com @tags, @summary, @description e @param eu deixo claro o que cada
-// endpoint recebe e devolve, incluindo os casos de erro e o PDF gerado.
-// ============================================================================
-
 /**
  * @typedef {object} reqBodyPdf
  */
 
 /**
  * GET /catalogo/pdf
- * @tags Relatórios
- * @summary Busca todos os registros de relatório e os converte para PDF
- * @description EndPoint responsável por buscar produtos cadastrados e transformá-los em PDF
+ * @tags PDF
+ * @summary Gera o PDF com todos os produtos
+ * @description Monta um relatório PDF com todos os itens do catálogo e devolve o arquivo em application/pdf.
+ * @security ApiKeyAuth
  *
- * @return 200 - Produtos encontrados e convertidos com sucesso
- * @return 404 - Nenhum produto encontrado
- * @return 500 - Erro interno do servidor
+ * @return {string} 200 - PDF gerado com sucesso - application/pdf
+ * @return {object} 404 - Nenhum produto encontrado
+ * @return {object} 500 - Erro interno do servidor
  */
 export const relatorioTodos = async (req, res) => {
     try {
@@ -46,16 +40,17 @@ export const relatorioTodos = async (req, res) => {
 
 /**
  * GET /catalogo/{id}/pdf
- * @tags Relatórios
- * @summary Busca um registro e converte-o para PDF através do ID
- * @description EndPoint responsável por buscar produtos por ID e transformá-los em PDF
+ * @tags PDF
+ * @summary Gera o PDF de um produto por ID
+ * @description Gera o PDF de um item específico do catálogo e retorna o arquivo em application/pdf.
+ * @security ApiKeyAuth
  *
  * @param {integer} id.path.required
  *
- * @return 200 - Produto encontrado e convertido com sucesso
- * @return 400 - Dados inválidos
- * @return 404 - Produto não encontrado
- * @return 500 - Erro interno do servidor
+ * @return {string} 200 - PDF gerado com sucesso - application/pdf
+ * @return {object} 400 - Dados inválidos
+ * @return {object} 404 - Produto não encontrado
+ * @return {object} 500 - Erro interno do servidor
  */
 export const relatorioPorId = async (req, res) => {
     try {

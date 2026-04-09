@@ -12,14 +12,32 @@
 
 /**
  * POST /principal
- * @tags Fornecedores
- * @summary Cria um novo registro de fornecedor
- * @description EndPoint responsável por cadastrar um novo fornecedor no sistema web.
+ * @tags Principal
+ * @summary Cadastra um fornecedor
+ * @description Cadastra um fornecedor e completa o endereço com base no CEP informado.
+ * @security ApiKeyAuth
  * @param {reqBodyFornecedor} request.body.required
  *
  * @return 201 - Fornecedor criado com sucesso
  * @return 400 - Dados inválidos ou campos obrigatórios não informados
  * @return 500 - Erro interno no servidor
+ * @example response - 201 - Exemplo de resposta
+ * {
+ *   "message": "Registro criado com sucesso!",
+ *   "data": {
+ *     "id": 1,
+ *     "nome": "Fornecedor Teste",
+ *     "email": "teste@fornecedor.com",
+ *     "telefone": "11999999999",
+ *     "cnpj": "12.345.678/0001-90",
+ *     "cep": "01001000",
+ *     "logradouro": "Praça da Sé",
+ *     "bairro": "Sé",
+ *     "localidade": "São Paulo",
+ *     "uf": "SP",
+ *     "ativo": true
+ *   }
+ * }
  */
 export const criar = async (req, res) => {
     try {
@@ -79,17 +97,17 @@ export const criar = async (req, res) => {
 
 /**
  * GET /principal
- * @tags Fornecedores
- * @summary Busca todos os registros de fornecedores
- * @description EndPoint responsável por buscar fornecedores cadastrados no sistema web.
- * Permite filtrar os resultados utilizando parâmetros de consulta (query params).
+ * @tags Principal
+ * @summary Lista os fornecedores
+ * @description Lista os fornecedores cadastrados e permite filtrar por nome, email, localidade e ativo.
+ * @security ApiKeyAuth
  *
  * @param {string} nome.query
  * @param {string} email.query
  * @param {string} localidade.query
  * @param {boolean} ativo.query
  *
- * @return {array<reqBodyFornecedor>} 200 - Lista de fornecedores encontrada com sucesso
+ * @return {array<reqBodyFornecedor>} 200 - Lista de fornecedores
  * @return {object} 404 - Nenhum fornecedor encontrado
  * @return {object} 500 - Erro interno no servidor
  */
@@ -110,9 +128,10 @@ export const buscarTodos = async (req, res) => {
 
 /**
  * GET /principal/{id}
- * @tags Fornecedores
- * @summary Busca um registro de fornecedor por ID
- * @description EndPoint responsável por buscar um fornecedor específico cadastrado no sistema web a partir do ID.
+ * @tags Principal
+ * @summary Busca um fornecedor por ID
+ * @description Busca um fornecedor específico pelo ID informado.
+ * @security ApiKeyAuth
  * @param {integer} id.path.required
  *
  * @return 200 - Fornecedor encontrado com sucesso
@@ -143,9 +162,10 @@ export const buscarPorId = async (req, res) => {
 
 /**
  * PUT /principal/{id}
- * @tags Fornecedores
- * @summary Atualiza um registro de fornecedor por ID
- * @description Endpoint responsável por atualizar fornecedor específico pelo seu ID.
+ * @tags Principal
+ * @summary Atualiza um fornecedor por ID
+ * @description Atualiza um fornecedor existente e, quando o CEP muda, refaz a consulta de endereço.
+ * @security ApiKeyAuth
  * @param {integer} id.path.required
  * @param {reqBodyFornecedor} request.body.required
  *
@@ -219,9 +239,10 @@ export const atualizar = async (req, res) => {
 
 /**
  * DELETE /principal/{id}
- * @tags Fornecedores
- * @summary Deleta um registro de fornecedor por ID
- * @description Endpoint responsável por deletar fornecedor específico pelo seu ID.
+ * @tags Principal
+ * @summary Remove um fornecedor por ID
+ * @description Remove um fornecedor existente pelo ID.
+ * @security ApiKeyAuth
  * @param {integer} id.path.required
  *
  * @return 200 - Registro deletado com sucesso

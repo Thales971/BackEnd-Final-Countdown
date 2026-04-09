@@ -2,27 +2,29 @@
 import fs from 'fs/promises';
 import { processarFoto, removerFoto } from '../utils/fotoHelper.js';
 
-// ============================================================================
-// Estes comentários alimentam a documentação automática do Swagger.
-// Eu uso @tags, @summary, @description e @param para explicar a rota de forma
-// clara na tela de testes em /api-docs.
-// No caso do upload, o @consumes multipart/form-data é o que faz o Swagger
-// mostrar o campo de arquivo para enviar a foto.
-// ============================================================================
+/**
+ * @typedef {object} UploadFotoPayload
+ * @property {string} foto.required - Arquivo da foto no envio multipart/form-data.
+ */
 
 /**
  * POST /catalogo/{id}/foto
- * @tags Produtos
- * @summary Faz o upload da foto de um produto
- * @description EndPoint responsável por anexar uma foto a um produto existente a partir do ID. A imagem é redimensionada e otimizada (JPEG).
+ * @tags Foto
+ * @summary Envia ou troca a foto de um produto
+ * @description Recebe a imagem do item, redimensiona para no máximo 800px, converte para JPEG e substitui a foto anterior.
+ * @security ApiKeyAuth
  * @param {integer} id.path.required
- * @param {file} foto.formData.required - Imagem do produto
- * @consumes multipart/form-data
+ * @param {UploadFotoPayload} request.body.required - Foto do produto em multipart/form-data
  *
  * @return 201 - Foto salva com sucesso
  * @return 400 - ID inválido ou nenhuma imagem enviada
  * @return 404 - Registro do produto não encontrado
  * @return 500 - Erro interno ao salvar o registro da foto
+ * @example response - 201 - Exemplo de foto salva
+ * {
+ *   "message": "Foto salva com sucesso!",
+ *   "foto": "uploads/produto_1_1710000000000.jpg"
+ * }
  */
 export const uploadFoto = async (req, res) => {
     try {
@@ -63,9 +65,10 @@ export const uploadFoto = async (req, res) => {
 
 /**
  * GET /catalogo/{id}/foto
- * @tags Produtos
- * @summary Visualiza a foto de um produto
- * @description EndPoint responsável por retornar o arquivo de imagem associado ao produto correspondente ao ID.
+ * @tags Foto
+ * @summary Mostra a foto de um produto
+ * @description Retorna a imagem salva para o item do catálogo.
+ * @security ApiKeyAuth
  * @param {integer} id.path.required
  *
  * @return 200 - Arquivo de imagem do produto

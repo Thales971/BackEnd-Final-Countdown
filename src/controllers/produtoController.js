@@ -15,14 +15,28 @@ const parseId = (value) => Number.parseInt(value, 10);
 
 /**
  * POST /catalogo
- * @tags Produtos
- * @summary Cria um novo registro de produto
- * @description EndPoint responsável por cadastrar um novo produto no sistema web.
+ * @tags Catálogo
+ * @summary Cadastra um item do catálogo
+ * @description Cadastra um item do catálogo e o liga ao fornecedor informado.
  * @param {reqBodyProduto} request.body.required
  *
  * @return 201 - Produto criado com sucesso
  * @return 400 - Dados inválidos ou campos obrigatórios não informados
  * @return 500 - Erro interno no servidor
+ * @example response - 201 - Exemplo de resposta
+ * {
+ *   "message": "O produto \"Produto Teste\" foi criado com sucesso!",
+ *   "data": {
+ *     "id": 1,
+ *     "nome": "Produto Teste",
+ *     "descricao": "Descrição teste",
+ *     "categoria": "ELETRONICOS",
+ *     "disponivel": true,
+ *     "preco": 199.9,
+ *     "foto": null,
+ *     "fornecedorId": 1
+ *   }
+ * }
  */
 export const criar = async (req, res) => {
     try {
@@ -71,16 +85,15 @@ export const criar = async (req, res) => {
 
 /**
  * GET /catalogo
- * @tags Produtos
- * @summary Busca todos os registros de produtos
- * @description EndPoint responsável por buscar produtos cadastrados no sistema web.
- * Permite filtrar os resultados utilizando parâmetros de consulta (query params).
+ * @tags Catálogo
+ * @summary Lista os itens do catálogo
+ * @description Lista os itens do catálogo e permite filtrar por nome, categoria e disponibilidade.
  *
  * @param {string} nome.query
  * @param {string} categoria.query
  * @param {boolean} disponivel.query
  *
- * @return {array<reqBodyProduto>} 200 - Lista de produtos encontrada com sucesso
+ * @return {array<reqBodyProduto>} 200 - Lista de produtos
  * @return {object} 500 - Erro interno no servidor
  */
 export const buscarTodos = async (req, res) => {
@@ -115,9 +128,9 @@ export const buscarTodos = async (req, res) => {
 
 /**
  * GET /catalogo/{id}
- * @tags Produtos
- * @summary Busca um registro de produto por ID
- * @description EndPoint responsável por buscar um produto específico cadastrado no sistema web a partir do ID.
+ * @tags Catálogo
+ * @summary Busca um item do catálogo por ID
+ * @description Busca um item do catálogo pelo ID informado.
  * @param {integer} id.path.required
  *
  * @return 200 - Produto encontrado com sucesso
@@ -147,9 +160,9 @@ export const buscarPorId = async (req, res) => {
 
 /**
  * PUT /catalogo/{id}
- * @tags Produtos
- * @summary Atualiza um registro de produto por ID
- * @description Endpoint responsável por atualizar produto específico pelo seu ID.
+ * @tags Catálogo
+ * @summary Atualiza um item do catálogo por ID
+ * @description Atualiza um item do catálogo pelo ID.
  * @param {integer} id.path.required
  * @param {reqBodyProduto} request.body.required
  *
@@ -218,9 +231,9 @@ export const atualizar = async (req, res) => {
 
 /**
  * DELETE /catalogo/{id}
- * @tags Produtos
- * @summary Deleta um registro de produto por ID
- * @description Endpoint responsável por deletar produto específico pelo seu ID.
+ * @tags Catálogo
+ * @summary Remove um item do catálogo por ID
+ * @description Remove um item do catálogo pelo ID.
  * @param {integer} id.path.required
  *
  * @return 200 - Registro deletado com sucesso

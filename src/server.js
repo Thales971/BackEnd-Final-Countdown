@@ -19,6 +19,13 @@ docApiSwagger(app)({
         description:
             'Uma API projetada para o controle essencial de cadastros de produtos e fornecedores corporativos.',
     },
+    security: {
+        ApiKeyAuth: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'X-API-Key',
+        },
+    },
     baseDir: import.meta.dirname,
     filesPattern: './**/*.js',
 });
@@ -27,13 +34,13 @@ app.get('/', (req, res) => {
     res.send('🚀 API funcionando');
 });
 
-// Rotas
+// Rotas da aplicação
 app.use('/principal', autenticar, fornecedorRoutes);
 app.use('/', fotoRoute);
 app.use('/', pdfRoute);
 app.use('/catalogo', catalogoRoutes);
 
-// Arquivos estáticos
+// Imagens geradas pelo upload
 app.use('/', express.static('uploads'));
 
 app.use((req, res) => {
